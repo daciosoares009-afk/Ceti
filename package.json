@@ -1,0 +1,52 @@
+{
+  "name": "ceti-platform",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.15.0 <25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @ceti/web dev",
+    "build": "pnpm db:generate && pnpm --filter @ceti/web build",
+    "start": "pnpm --filter @ceti/web start",
+    "typecheck": "pnpm --filter @ceti/web typecheck && tsc -p tsconfig.scripts.json",
+    "lint": "eslint .",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:e2e": "playwright test",
+    "db:generate": "prisma generate --schema packages/database/prisma/schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema packages/database/prisma/schema.prisma",
+    "db:validate": "prisma validate --schema packages/database/prisma/schema.prisma",
+    "bootstrap": "tsx scripts/bootstrap.ts",
+    "worker:email": "tsx scripts/email-worker.ts",
+    "maintenance": "tsx scripts/maintenance.ts",
+    "services:local": "node scripts/local-services.mjs",
+    "db:migrate:test": "node scripts/migrate-test.mjs",
+    "security:scan": "node scripts/security-scan.mjs",
+    "security:audit": "pnpm audit --audit-level=high"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.19.2",
+    "@types/nodemailer": "8.0.2",
+    "@types/smtp-server": "3.5.13",
+    "embedded-postgres": "18.6.0-beta.19",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "prisma": "7.10.1",
+    "smtp-server": "3.21.6",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.0"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "2.2.2",
+    "@prisma/client": "7.10.1",
+    "dotenv": "18.0.10",
+    "nodemailer": "10.6.0",
+    "zod": "4.6.7"
+  }
+}

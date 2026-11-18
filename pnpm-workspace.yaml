@@ -1,0 +1,18 @@
+packages:
+  - apps/*
+  - packages/*
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - next
+  - eslint-config-next
+  - react
+  - react-dom
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  prisma: true
+  esbuild: true
+  sharp: true
+  '@tailwindcss/oxide': true
+  '@embedded-postgres/windows-x64': true
+  '@embedded-postgres/linux-x64': false

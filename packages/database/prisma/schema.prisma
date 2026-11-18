@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+enum Role {
+  STUDENT
+  TEACHER
+  MANAGER
+}
+enum MembershipStatus {
+  PENDING_EMAIL
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+enum TokenPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+model User {
+  id              String        @id @default(uuid()) @db.Uuid
+  name            String        @db.VarChar(100)
+  email           String        @unique @db.VarChar(254)
+  passwordHash    String
+  status          AccountStatus @default(ACTIVE)
+  emailVerifiedAt DateTime? @db.Timestamptz(3)
+  mfaSecret       String?
+  mfaLastStep     BigInt         @default(-1)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  memberships     Membership[]
+  sessions        Session[]
+  tokens          ActionToken[]
+}
+model School {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @db.VarChar(150)
+  slug        String       @unique @db.VarChar(80)
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  memberships Membership[]
+  auditEvents AuditEvent[]
+}
+model Membership {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  schoolId    String           @db.Uuid
+  role        Role
+  status      MembershipStatus @default(PENDING_EMAIL)
+  reviewedAt  DateTime? @db.Timestamptz(3)
+  reviewedBy  String?          @db.Uuid
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  school      School           @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  @@unique([userId, schoolId])
+  @@index([schoolId, status, createdAt])
+}
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  tokenHash    String   @unique @db.Char(64)
+  userId       String   @db.Uuid
+  mfaVerified  Boolean  @default(false)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  expiresAt    DateTime @db.Timestamptz(3)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+model ActionToken {
+  id         String       @id @default(uuid()) @db.Uuid
+  tokenHash  String       @unique @db.Char(64)
+  userId     String       @db.Uuid
+  purpose    TokenPurpose
+  expiresAt  DateTime @db.Timestamptz(3)
+  createdAt  DateTime     @default(now()) @db.Timestamptz(3)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailJob   EmailJob?
+  @@index([userId, purpose])
+  @@index([expiresAt])
+}
+model EmailJob {
+  id              String      @id @default(uuid()) @db.Uuid
+  tokenId         String      @unique @db.Uuid
+  tokenCiphertext String
+  attempts        Int         @default(0)
+  availableAt     DateTime    @default(now()) @db.Timestamptz(3)
+  claimedAt       DateTime? @db.Timestamptz(3)
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+  token           ActionToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  @@index([availableAt, attempts])
+}
+model RateLimit {
+  key       String   @id @db.Char(64)
+  hits      Int      @default(1)
+  expiresAt DateTime @db.Timestamptz(3)
+  @@index([expiresAt])
+}
+model AuditEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  schoolId     String?  @db.Uuid
+  actorId      String?  @db.Uuid
+  action       String   @db.VarChar(80)
+  targetId     String?  @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  school       School?  @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  @@index([schoolId, createdAt])
+}

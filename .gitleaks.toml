@@ -1,0 +1,9 @@
+title = "CETI source secret scanning"
+[extend]
+useDefault = true
+[[allowlists]]
+description = "Generated dependencies, local private runtime data and test reports are not source artifacts"
+paths = [
+  '''(^|[\\/])(node_modules|\.next|\.local|\.git|coverage|test-results|playwright-report)([\\/]|$)''',
+  '''(^|[\\/])\.env$'''
+]
